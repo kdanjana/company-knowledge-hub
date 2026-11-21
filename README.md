@@ -222,24 +222,6 @@ See `docs/DECISIONS.md` for why each rule is the way it is.
 ```
 No relevant passage → the model is **not called** and the user gets "I could not find this…".
 
-### Key design decisions (interview talking points)
-1. **Pipeline first, agent only where needed.** Most pairs are decided by one judge call; only "unsure" pairs go to the agent.
-2. **High similarity ≠ duplicate.** "7 days" vs "3 days" is almost identical text, so near-identical pairs are the *most* suspicious.
-3. **n² → n·k.** Candidate pairs come from the vector index (top-k per chunk), not all-pairs comparison.
-4. **Grounding checked by code.** The judge must quote both passages exactly; the chat must cite real passage numbers.
-5. **Rules before LLM for "which is true".** Cheap, predictable, explainable; "unknown" is allowed.
-6. **The audit makes the chat safer.** Losing passages are removed from retrieval, and unresolved conflicts produce a warning instead of a confident wrong answer.
-7. **Access control at retrieval time.** The department filter is in the SQL query, so restricted text never reaches the model for users who may not see it.
-8. **Adapter for the knowledge base.** Another vector store = one new adapter class.
-9. **Cost control.** Verdict cache, reviewer suppression, max pairs per run, chat rate limit, no LLM call when nothing relevant is found, tokens and $ stored per verdict and per chat message.
-10. **Postgres as a job queue** for uploads and audits (`SELECT … FOR UPDATE SKIP LOCKED`, plus an advisory lock so
-    at most one audit waits in the queue); Celery/SQS at larger scale.
-11. **Uploads are gated, not trusted.** Metadata typed by an uploader (e.g. today's date) can never make a new
-    document win automatically; a replacement always needs an auditor's approval.
-12. **Decisions are tied to text, not IDs.** Fingerprints (content hashes) keep reviewer decisions and held texts
-    valid across re-loads; when a text changes, the old decision stops applying, which is correct.
-
-More detail and trade-offs: [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ### Observability
 | What | Where |
@@ -474,18 +456,3 @@ The `finance_staff` row is a good interview story: the onboarding guide still sa
 | `cost_usd`, `duration_seconds` | What one run costs and how long it takes. |
 
 The chat has no automatic evaluation yet (next step: a small question set with expected answers and sources).
-
----
-
-## Known limitations / next steps
-- Markdown only (PDF extraction is a separate problem).
-- Embedding calls (chat questions, investigator search) are not included in the cost totals.
-- A run left in `running` after a crash is not resumed automatically (mark it `failed` in the admin).
-- Option A uses development servers. Option B uses gunicorn + nginx but is still a local setup: real hosting would
-  add HTTPS, a managed database (e.g. RDS with pgvector), secrets in a secrets manager or an IAM role instead of keys
-  in `.env`, a connection pool, and Celery/SQS for audits.
-- Department access is per document, not per section.
-- Pairs of documents that no single person can see together (e.g. Operations-only vs Finance-only) are not audited.
-- Uploads: Markdown only, no upload rate limit, approvals do not record who approved.
-- Next: chat evaluation set, stale-reference detection, "condition split across chunks" findings,
-  routing hard pairs to a bigger model, source connectors (S3 / Confluence), scheduled audits.
