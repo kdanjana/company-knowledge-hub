@@ -1,0 +1,94 @@
+# Everything in Docker:  docker compose up -d --build   →  open http://localhost:8080
+# Only the database (for running Django/React directly on the laptop):  docker compose up -d db
+#
+# Values come from the .env file in this folder (copy .env.example to .env first).
+# Secrets (DB password, Django secret key, AWS keys) are passed to the containers at start-up;
+# they are never copied into an image (.env is excluded in .dockerignore).
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: kb_auditor_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kb_auditor}
+      POSTGRES_USER: ${POSTGRES_USER:-kb_auditor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-local-only}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"  # also reachable from the laptop (handy for local runs and DB tools)
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: kb_auditor_redis
+    # Used only as a cache (rate-limit counters): nothing saved to disk, max 64 MB.
+    # No port is opened to the laptop: only the containers reach it, at redis:6379.
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: kb_auditor_backend
+    command: ["web"]
+    env_file: .env
+    volumes:
+      - uploads:/app/uploads       # uploaded documents (original files); shared with the worker
+    environment: &backend_env
+      POSTGRES_HOST: db            # inside Docker the database is reached by its service name
+      POSTGRES_PORT: "5432"
+      KB_DATABASE_URL: ""          # built from the POSTGRES_* values above
+      REDIS_URL: "redis://redis:6379/0"   # shared cache: one rate-limit counter for all gunicorn processes
+      DJANGO_DEBUG: "false"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
+      CSRF_TRUSTED_ORIGINS: "http://localhost:${APP_PORT:-8080},http://127.0.0.1:${APP_PORT:-8080}"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # /api/ready/ answers 200 only when Postgres and Redis are reachable (503 otherwise = unhealthy).
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/ready/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: kb_auditor_worker
+    command: ["worker"]
+    env_file: .env
+    volumes:
+      - uploads:/app/uploads       # the worker reads uploaded files to chunk + embed them
+    environment: *backend_env
+    depends_on:
+      backend:
+        condition: service_healthy   # the backend runs the migrations first
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: kb_auditor_frontend
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  uploads:

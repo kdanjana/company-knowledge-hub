@@ -1,0 +1,266 @@
+# Answer key for the QuickBite test documents.
+#
+# Each item names two passages by document file + a short piece of text that appears in the passage.
+#   kind: contradiction | duplicate  -> the auditor SHOULD report it
+#   kind: trap                       -> looks like a conflict but is not; the auditor should NOT report it
+#   expected_truth                   -> which document should win (null = cannot be decided from metadata)
+#
+# Rule for keeping this file honest: every REAL conflict or duplicate in the documents must be listed here,
+# otherwise a correct finding would be counted as a false alarm. Traps are a sample, not a full list.
+
+items:
+  # ---------- Real contradictions ----------
+  - id: C01
+    kind: contradiction
+    topic: Refund window (India)
+    doc_a: refund-policy-2023.md
+    text_a: "within 7 days of delivery"
+    doc_b: refund-policy-2025.md
+    text_b: "India can request a refund within 3 days"
+    expected_truth: refund-policy-2025.md
+
+  - id: C02
+    kind: contradiction
+    topic: Refund processing time
+    doc_a: refund-policy-2023.md
+    text_a: "processed within 10 business days"
+    doc_b: refund-policy-2025.md
+    text_b: "processed within 5 business days"
+    expected_truth: refund-policy-2025.md
+
+  - id: C03
+    kind: contradiction
+    topic: Refund method
+    doc_a: support-faq.md
+    text_a: "original payment method or to your QuickBite wallet"
+    doc_b: refund-policy-2025.md
+    text_b: "credited only to the original payment method"
+    expected_truth: refund-policy-2025.md
+
+  - id: C04
+    kind: contradiction
+    topic: Annual leave days
+    doc_a: leave-policy-v1.md
+    text_a: "18 days of paid annual leave"
+    doc_b: leave-policy-v2.md
+    text_b: "24 days of paid annual leave"
+    expected_truth: leave-policy-v2.md
+
+  - id: C05
+    kind: contradiction
+    topic: Leave carry forward
+    doc_a: leave-policy-v2.md
+    text_a: "carry forward up to 15 days"
+    doc_b: leave-policy-draft.md
+    text_b: "carry forward up to 20 days"
+    expected_truth: leave-policy-v2.md
+
+  - id: C06
+    kind: contradiction
+    topic: Work from home days
+    doc_a: onboarding-guide.md
+    text_a: "work from home up to 2 days per week"
+    doc_b: remote-work-policy.md
+    text_b: "work from home up to 3 days per week"
+    expected_truth: remote-work-policy.md
+
+  - id: C07
+    kind: contradiction
+    topic: Ticketing tool
+    doc_a: onboarding-guide.md
+    text_a: "handled in Zendesk"
+    doc_b: support-team-playbook.md
+    text_b: "handled in Freshdesk"
+    expected_truth: support-team-playbook.md
+
+  - id: C08
+    kind: contradiction
+    topic: Password change interval
+    doc_a: onboarding-guide.md
+    text_a: "changed every 60 days"
+    doc_b: security-guidelines.md
+    text_b: "changed every 90 days"
+    expected_truth: security-guidelines.md
+
+  - id: C09
+    kind: contradiction
+    topic: Delivery time in Indian metro cities
+    doc_a: delivery-sla.md
+    text_a: "metro cities are delivered within 30 minutes"
+    doc_b: delivery-partner-handbook.md
+    text_b: "within 40 minutes"
+    expected_truth: delivery-sla.md
+
+  - id: C10
+    kind: contradiction
+    topic: Customer order data retention
+    doc_a: data-retention-policy.md
+    text_a: "retained for 3 years"
+    doc_b: security-guidelines.md
+    text_b: "retained for 5 years"
+    expected_truth: data-retention-policy.md
+
+  - id: C11
+    kind: contradiction
+    topic: Meal expense limit
+    doc_a: expense-policy.md
+    text_a: "up to ₹500 per day"
+    doc_b: expense-faq.md
+    text_b: "up to ₹800 per day"
+    expected_truth: expense-policy.md
+
+  - id: C12
+    kind: contradiction
+    topic: Expense submission deadline
+    doc_a: expense-policy.md
+    text_a: "within 30 days of the expense"
+    doc_b: expense-faq.md
+    text_b: "within 60 days of the expense"
+    expected_truth: expense-policy.md
+
+  - id: C13
+    kind: contradiction
+    topic: Customer care hours
+    doc_a: support-faq.md
+    text_a: "available 24x7"
+    doc_b: app-help-faq.md
+    text_b: "from 8 AM to 11 PM"
+    expected_truth: null   # both FAQs have no metadata; a human must decide
+
+  # ---------- Duplicates ----------
+  - id: D01
+    kind: duplicate
+    topic: How to request a refund
+    doc_a: refund-policy-2025.md
+    text_a: "choose \"Request a refund\""
+    doc_b: support-faq.md
+    text_b: "choose \"Request a refund\""
+
+  - id: D02
+    kind: duplicate
+    topic: Lock your laptop
+    doc_a: onboarding-guide.md
+    text_a: "lock your laptop when you leave your desk"
+    doc_b: security-guidelines.md
+    text_b: "lock your laptop when you leave your desk"
+
+  - id: D03
+    kind: duplicate
+    topic: Operations desk contact
+    doc_a: delivery-sla.md
+    text_a: "operations desk at extension 4400"
+    doc_b: delivery-partner-handbook.md
+    text_b: "operations desk at extension 4400"
+
+  - id: D04
+    kind: duplicate   # near-duplicate: "sent back" vs "returned"
+    topic: Receipts
+    doc_a: expense-policy.md
+    text_a: "Attach a clear photo of every receipt"
+    doc_b: expense-faq.md
+    text_b: "Attach a clear photo of every receipt"
+
+  # ---------- Traps (must NOT be reported) ----------
+  - id: T01
+    kind: trap
+    topic: Delivery time India vs UAE (different region)
+    doc_a: delivery-sla.md
+    text_a: "metro cities are delivered within 30 minutes"
+    doc_b: delivery-sla.md
+    text_b: "Dubai and Abu Dhabi are delivered within 45 minutes"
+
+  - id: T02
+    kind: trap
+    topic: Refund window India vs UAE (different region)
+    doc_a: refund-policy-2025.md
+    text_a: "India can request a refund within 3 days"
+    doc_b: refund-policy-2025.md
+    text_b: "UAE can request a refund within 5 days"
+
+  - id: T03
+    kind: trap
+    topic: Old India refund window vs UAE refund window (different region)
+    doc_a: refund-policy-2023.md
+    text_a: "within 7 days of delivery"
+    doc_b: refund-policy-2025.md
+    text_b: "UAE can request a refund within 5 days"
+
+  - id: T04
+    kind: trap
+    topic: Cancellation rule vs late-preparation exception
+    doc_a: refund-policy-2025.md
+    text_a: "cannot be cancelled for a refund"
+    doc_b: refund-policy-2025.md
+    text_b: "within 20 minutes of accepting the order"
+
+  - id: T05
+    kind: trap
+    topic: Core hours written two ways (same meaning)
+    doc_a: remote-work-policy.md
+    text_a: "11:00 to 16:00 IST"
+    doc_b: onboarding-guide.md
+    text_b: "11 AM to 4 PM IST"
+
+  - id: T06
+    kind: trap
+    topic: Reimbursement timing written two ways (same meaning)
+    doc_a: expense-policy.md
+    text_a: "paid with the next monthly salary"
+    doc_b: expense-faq.md
+    text_b: "paid out together with your next month's salary"
+
+  - id: T07
+    kind: trap
+    topic: Employee discount vs new customer discount (different audience)
+    doc_a: employee-perks.md
+    text_a: "Employees get 20% off"
+    doc_b: customer-offers.md
+    text_b: "New customers get 10% off"
+
+  - id: T08
+    kind: trap
+    topic: Employee leave vs delivery partner leave (different audience)
+    doc_a: leave-policy-v2.md
+    text_a: "24 days of paid annual leave"
+    doc_b: delivery-partner-handbook.md
+    text_b: "do not receive paid annual leave"
+
+  - id: T09
+    kind: trap
+    topic: Alcohol rule vs client dinner exception
+    doc_a: expense-policy.md
+    text_a: "Alcohol is never reimbursed"
+    doc_b: expense-policy.md
+    text_b: "one drink per person may be reimbursed"
+
+  - id: T10
+    kind: trap
+    topic: Customer data vs employee records retention (different data)
+    doc_a: data-retention-policy.md
+    text_a: "retained for 3 years"
+    doc_b: data-retention-policy.md
+    text_b: "retained for 7 years"
+
+  - id: T11
+    kind: trap
+    topic: Leave notice rule vs same-day sick leave exception
+    doc_a: leave-policy-v2.md
+    text_a: "at least 7 days in advance"
+    doc_b: leave-policy-v2.md
+    text_b: "applied for on the same day"
+
+  - id: T12
+    kind: trap
+    topic: Chat vs email response time (different channel)
+    doc_a: support-team-playbook.md
+    text_a: "within 2 minutes"
+    doc_b: support-team-playbook.md
+    text_b: "within 24 hours"
+
+  - id: T13
+    kind: trap
+    topic: Guest Wi-Fi password vs account password (different thing)
+    doc_a: office-wifi.md
+    text_a: "Guest Wi-Fi passwords change every Monday"
+    doc_b: security-guidelines.md
+    text_b: "changed every 90 days"

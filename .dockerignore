@@ -1,0 +1,10 @@
+# Build context for the backend image is the project root. Never send secrets or local junk to Docker.
+.env
+.git
+**/venv
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+backend/staticfiles
+frontend/
